@@ -2,37 +2,45 @@
 ## by: Miles Henle
 
 #### DESCRIPTION
+![](DataFlow.png)\
+This program accepts texted commands and responds with information periodically taken from a database. The commands are sent through a Twilio virtual phone number. Twilio converts the text messages to HTTPS POST requests and sends it to the program. The program sends back a response, which Twilio converts back into a text message and sends to the user. The database is a Google Spreadsheet.
 
-This program accepts texted commands and responds with information from a database. The commands are sent through a Twilio virtual phone number. The database is a Google Spreadsheet. This project is intended for use by Suffield Middle School, but can be expanded on for other cases. This project requires you to supply your Twilio account for inbound and outbound messaging fees. The owner/admin of the spreadsheet has total control over the spreadsheet. Everyone else is restricted to the editing boxes highlighted in various colors. The admin can expand editing boxes, but must follow the instructions carefully.
+This project is intended for use by Suffield Middle School, but can be expanded on for other cases. This project requires you to supply your Twilio account with money for inbound and outbound messaging fees. The owner/admin of the spreadsheet has total control over the spreadsheet. Everyone else is restricted to the editing boxes highlighted in various colors. The admin can expand editing boxes, but must follow the instructions carefully.
+    
+* A typical invocation of this program will be `java -jar /path/to/MiddleSchoolSchedule.jar -DproPath=app/example/path -Dlimit=50`. I recommend changing directory to the encompassing folder if possible, for minimal confusion regarding file paths.
 
 #### INSTALLATION
 
 ![](FileStructure.png)\
-Your end product should resemble this when complete. If you are tying this to your own Gmail, then you will provide `credentials.json`, and `StoredCredential` will be created when you first run the code.
+Your end product should resemble this when complete. If you are tying this to your own Gmail, then you will provide `credentials.json`, and `StoredCredential` will be created when you first run the code. The `phone[date].txt` files will be created on the first message of each day.
 
 1. Properties
 
-    * The `schedule.properties` file's default path is `src/main/resources/`. It's path can be changed if you want it in a different location. Add `-DproPath=${app/example/path}` to the command line when running the program.
+    * The `schedule.properties` file's default path is `src/main/resources/`. It's path can be changed if you want it in a different location. Add `-DproPath=app/example/path` to the command line when running the program.
 
-    * All properties in the file can also be changed in the command line. Their system property names are identical to the ones in the file.
+    * All properties in the file can also be changed in the command line. Their system property names are identical to the ones in the file. `-Dlimit=50` will be a typical change.
 
     1. Log in to your Twilio Account [here](https://www.twilio.com/login), or make a new one. Copy the Account SID and paste with the `TwilioID` line of `schedule.properties` in the resources folder. This ensures that the program only responds to POST requests from **your** account.
 
     2. Create a password and enter it into the `password` line of `schedule.properties`. This will be used later for another layer of security. Beware of special HTTP formatting.
 
-    3. Create a Google Spreadsheet. You must copy it from the template [here](https://docs.google.com/spreadsheets/d/1QO8fHedJbx6vxmhYS0U85K8SFER1Gwg3t27rhXrGweQ/edit?usp=sharing). Make sure that whomever does this uses the correct Google account. Only the owner can change the cell arrangement. All others will be restricted to the editing boxes (more on those later). In the URL, you will find a long string of random characters, separated by a slash. Copy and paste it into the `GoogleID` line of `schedule.properties`. For reference, the template's ID is `1QO8fHedJbx6vxmhYS0U85K8SFER1Gwg3t27rhXrGweQ`. Be sure to disable the sharing link if you want to invite personnel individually.
+    3. Create a Google Spreadsheet. You must copy it from the template [here](https://docs.google.com/spreadsheets/d/1QO8fHedJbx6vxmhYS0U85K8SFER1Gwg3t27rhXrGweQ/edit?usp=sharing). Make sure that whomever does this uses the correct Google account. Only the admin can change the cell arrangement. All others will be restricted to the editing boxes (more on those later). In the URL, you will find a long string of random characters, separated by slashes. Copy and paste it into the `GoogleID` line of `schedule.properties`. For reference, the template's ID is `1QO8fHedJbx6vxmhYS0U85K8SFER1Gwg3t27rhXrGweQ`. Be sure to disable the sharing link if you want to invite personnel individually.
+
+        * If the link does not work, then you will have to recreate this on your own. Find detailed instructions for this below.
 
     4. `GoogleName` is unimportant, but it must exist. It will be passed to the Google Sheets API when reading the spreadsheet.
 
     5. `limit` specifies the number of times any one user may send a command to the program in a given interval of time. After reaching the limit, the user will be warned and given links to the website for the complete schedule. All future requests will not be responded to until the interval has passed. This is to protect against large Twilio bills from potential message bots. 
 
-    6. `limitInterval` is the length of time before resetting the command count of each user. It is counted in milliseconds: 60000 for 1 minute. Do not use any kind of arithmetic signs. It is read as a string, so `10 * 60000` will result in an error. Consider a reasonable limit with a long interval. If someone sends 10 commands, they probably will not have more questions for most of that day. If the user actually wanted the entire week's schedule, it would be easier for them to go to the website anyway. 15 commands in 6 hours is what I would recommend, but you decide.
+    6. `limitInterval` is the length of time before resetting the command count of each user. It is counted in milliseconds: 60000 for 1 minute. Do not use any kind of arithmetic signs. It is read as a string, so `10 * 60000` will result in an error. Consider a reasonable limit with a long interval. If someone sends 10 commands, they probably will not have more questions for most of that day. If the user actually wanted the entire week's schedule, it would be easier for them to go to the website anyway. 15 commands in 6 hours is what I would recommend, but you decide. The program also adjusts the timing to align the interval with the clock. 15 min interval results in 1:00 -> 1:15 -> 1:30.
 
     7. `limitMessage` is the human representation of `limitInterval`, which will be given to the user upon reaching `limit`. 600000 milliseconds = 10 minutes.
 
-    8. `updateInterval` is the length of time (milliseconds) before checking the spreadsheet. The program reads the spreadsheet information and updates its memory, which will be used until the next interval. Set longer intervals to reduce processing power, if so desired. Google has a limit of 100 requests in 100 seconds, and each interval uses several requests, so be reasonable.
+    8. `updateInterval` is the length of time (milliseconds) before checking the spreadsheet. The program reads the spreadsheet information and updates its memory, which will be used until the next interval. Set longer intervals to reduce processing power, if so desired. Google has a limit of 100 requests in 100 seconds, and each interval uses several requests, so be reasonable. This is also adjusted to match the clock.
 
     9. `credPath` is the path of credentials.json (more on that later).
+
+    10. `logPath` is the path of the `phone[date].txt` files.
 
 2. TWILIO
 
@@ -50,7 +58,7 @@ Your end product should resemble this when complete. If you are tying this to yo
 
     1. Sign in to the desired Gmail account. Go to the Java Quickstart of the Google Sheets API [here](https://developers.google.com/sheets/api/quickstart/java) and click the blue icon with "Enable the Google Sheets API."
     
-    2. I do not believe the name matters, but enter "Middle School Schedule" just to be sure and advance. Leave the drop-down menu as "Desktop App" and click "Create." Download the Client Configuration and leave the file name unchanged. This will create credentials.json. The Client Secret and ID are not used.
+    2. I do not believe the name matters, but enter "Middle School Schedule" just to be sure and advance. Leave the drop-down menu as "Desktop App" and click "Create." Download the Client Configuration and leave the file name unchanged. This will create `credentials.json`. The Client Secret and ID are not used.
     
     3. Drag the file to the resources folder (or whichever replacement you decide on).
 
@@ -70,13 +78,13 @@ Your end product should resemble this when complete. If you are tying this to yo
 
 1. LOGGING
 
-    * All HTTP POST requests are recorded in `phone.txt`. The timestamp is in ISO 8601 format. The entry is formatted like this: `+18609665991	2020-06-26T11:18:32EDT	Thursday games`.
+    * All HTTP POST requests are recorded in the `phone[date].txt` files. The timestamp is in ISO 8601 format. The entry is formatted like this: `+18609665991	2020-06-26T11:18:32EDT	Thursday games`. The files are separated by day, and a new file is made on the first message of each day.
 
     * All HTTP GET requests are recorded in `web.txt`, formatted the same way.
 
 2. TWILIO
 
-    * Twilio keeps track of messaging traffic with a line chart. Messages exceeding 160 characters will be treated like multiple ones and will be charged as such. No commands should exceed 160 characters, so beware of anyone trying to accumulate up a large inbound message fee with massive and/or repeated messages. The program detects spam through `limit` and `limitInterval`, which you set earlier, but it cannot prevent the inbound message fee. Check `phone.txt` to look for repeated commands if an unusually high fee is charged. Responses can exceed 160 characters either through the help responses (which list every command) or event types with several entries in one day.
+    * Twilio keeps track of messaging traffic with a line chart. Messages exceeding 160 characters are treated like multiple ones and will be charged as such. No commands should exceed 160 characters, so beware of anyone trying to accumulate a large inbound message fee with massive and/or repeated messages. The program detects spam through `limit` and `limitInterval`, which you set earlier, but it cannot prevent the inbound message fee. If an unusually high fee is charged, check the corresponding `phone[date].txt` file to look for repeated commands. Responses can exceed 160 characters either through the help responses (which list every command) or larger event types like `Games` and `Practices`.
 
 3. GOOGLE SHEETS
 
@@ -84,23 +92,64 @@ Your end product should resemble this when complete. If you are tying this to yo
 
         * In order to tie this program to a new Gmail account, delete `credentials.json` and `StoredCredential`, then follow steps 3 and 4 to make new credentials.
 
-        * In order to transfer ownership of the spreadsheet, go to "Share" and find the desired account. Click on their status menu, which has "Editor," "Commentor," and "Viewer" as its options. Click on "Make owner" and confirm the decision.
+        * In order to transfer ownership of the spreadsheet, go to "Share" and find the desired account. Click on their status menu, which has "Editor," "Commentor," and "Viewer" as its options. Click on "Make owner" and confirm the decision. Be sure to also grant them admin privileges.
+
+         * The admin is anyone who can make changes outside of the designated editing boxes. The owner of the spreadsheet should always be an admin. If multiple people are managing the spreadsheet, others may be granted the right.
+
+            * In order to grant access, first make sure you are not highlighting any range of cells, then click on "Data" -> "Protected sheets and ranges" -> "SMS except [number] ranges" -> "Change permissions" -> "Custom." Select other people as if you were sharing the spreadsheet with them.
+
+            * **Standard personnel are not to be granted access. Only the manager(s).** This restricts people from screwing around with the data validation and cell arrangement. Only someone who has read this document is allowed to edit the format. All others are to leave their requests for you or another admin to solve. If you think that everyone should be allowed to edit the format, then **PLEASE** at least make them read this, if only the GOOGLE SHEETS part of MAINTAINENCE. Then they can change the cell arrangement without breaking the program. Change the protected sheet permissions to "Show a warning when editing this range." This will warn anyone, even you, when making changes outside the boxes. They can either acknowledge the warning or cancel the change.
+
+            * The admin of the spreadsheet is allowed to make any changes outside of the boxes that they wish. In fact, I recommend leaving helpful notes about the drop-down calendar and the desire to keep descriptions short.
 
     * Spreadsheet Arrangement
 
-        * For each event type, figure out the maximum number of events that should be plausible to reach in any day. Estimate high, since some personnel might leave the entries in after the day has passed, while others might put in entries an entire week in advance, giving you up to 2 day's worth of entries. Remember, more entries -> more characters -> higher Twilio fees. You can also create a guideline for people to follow, like "Schedule no more than 7 days in advance and remove entries after the day is over." The owner of the spreadsheet is allowed to expand the ranges of the editing boxes. Follow these instructions in order to do so.
+        * For each event type, figure out the maximum number of events that should be plausible to reach in any day. Estimate high, since some personnel might leave the entries in after the day has passed, while others might put in entries an entire week in advance, giving you up to 2 day's worth of entries. With that in mind, I recommend that each event type have a minimum of 2 rows. There is no upper limit, but remember that more entries -> more characters -> higher Twilio fees. You can also create a guideline for people to follow, like "Schedule no more than 7 days in advance and remove entries after the day is over." The admin of the spreadsheet is allowed to expand the ranges of the editing boxes. Follow these instructions in order to do so.
 
-        * The owner is also the only one who can change the length of the columns. I recommend finding a length that encourages shorter event descriptions.
+        * The admin is also the only one who can change the length of the columns. I recommend finding a length that encourages reasonably short event descriptions.
 
         1. Highlight any bottom pair of cells in the range you wish to modify.
 
-        2. Right click (2 finger trackpad) on the highlighted section. Select "Insert 2 rows" in order to expand the range. Select "Delete rows [number range]" to shrink it. This will extend all of the formatting and data validation into the new rows.
+        2. Right click on the highlighted section. Select "Insert 2 rows" in order to expand the range. Select "Delete rows [number range]" to shrink it. This will extend all of the formatting and data validation into the new rows. Repeated use may leave holes in the formatting, namely the darkened border. Repair them as necessary.
     
-            * Note that the lower cell of each pair should accept valid dates **only**, formatted as `Mon, Jun 15`, and offer a drop-down calendar when double-clicked, for selecting dates.
+            * Note that the lower cell of each pair should accept valid dates **only**, formatted as `Tue, Aug 5`, and offer a drop-down calendar when double-clicked, for selecting dates.
 
-        3. The named ranges should expand/shrink automatically, but check to be sure. The editors are only allowed to type within the named ranges, so be sure that it matches the highlighted boxes. Select "Data" in the upper right corner and click on "Named Ranges." The numbers  The list of ranges will appear on the right hand side of the screen. The range can be found underneath the name. `SMS!C7:I10` means that it extends from row 7 of column C to row 10 of column I (like Battleship) inside of the SMS sub sheet.
+        3. The named ranges should expand/shrink automatically, but check to be sure. The program can only read in the named ranges. The editors are only allowed to type within the protected areas, so check those too. Make sure that both of them match the colored boxes. Select "Data" in the upper right corner and click on "Named Ranges." The list of ranges will appear on the right hand side of the screen. The range can be found underneath the name. `SMS!C7:I10` means that it extends from row `7` of column `C` to row `10` of column `I` (like Battleship) inside of the SMS sub sheet.
 
-            *  Under no circumstances will you change the names of the ranges or make any changes inside "Protected Sheets and Ranges." This will severely disrupt the program's ability to read information from the spreadsheet
+            * **You are not to change the names of the ranges.** This will severely disrupt the program's ability to read information from the spreadsheet.
+    
+#### SPREADSHEET CREATION
 
-            * The owner of the spreadsheet is allowed to make any changes outside of the boxes that they wish. In fact, I recommend leaving helpful notes about the drop-down calendar and keeping descriptions short.
+![](Spreadsheet.png)
 
+* Follow these steps **to the letter** in order to recreate the spreadsheet. You can continue with the regular installation steps once the blank sheet is made and you have the spreadsheet ID, but you will have to complete this before first running the code.
+
+* Currently, the event types are `Lunch`, `Breakfast`, `Games`, `Practices`, `Clubs`, `Intramural`, `News`, `PTAC`.
+
+1. Type "Event Types" in cell `A1`. Type "Lunch," or whichever event type goes first, in cell `A2`; the order does not matter. Label cells `B1` and `B2` as "Description" and "Date" respectively. Label columns `C-I` at the top as Monday-Sunday. This format will be continued with each event type, as seen above.
+
+    * This bit really does not matter, but rename the sub sheet on the bottom left to "SMS," for consistency.
+
+2. Highlight cell range `C2:I3` and do the following. These steps replicate the appearance seen above and are mostly optional. Create your own style if you wish.
+
+    * Find the "Cell borders" option. This version uses the second "Border style." Click on "Outer borders" and "Vertical borders" to pair up the cells. Deviation from this is allowed, but you should find some way to pair up the description and date cells.
+
+    * Find the "Fill color" option and choose a color for this box. This version uses "Light" colors 1 and 2.
+
+3. Highlight cell range `C3:I3` (the date cells) and do the following. This is **not optional**.
+
+    1. Click on "Data," then "Data validation." Choose "Date" and "is a valid date" in "Criteria." Click on "Reject input" and "Show validation help text," then save.
+
+    2. Click on "Format" -> "Numbers" -> "More formats" -> "More date and time formats." Make a custom format with, `Day (Tue)`, `Month (Aug)`, and `Day (5)`, in that order, with a comma and space after the weekday. The resulting format appears as `Tue, Aug 5`. Also set the horizontal alignment to left, for consistency.
+
+    3. Test the changes by double-clicking on one of the date cells. This should summon a drop-down calendar from which you can select a date. Clicking on a day should automatically type that date in the correct format. 
+
+4. Highlight cell range `C2:I3` and copy it. Click on cell `C4` and paste to add a second row to the editing box. This should copy all of the formatting and data validation, but check to be sure. Copy cell range `B1:I5`. Click on cell `B6` and paste to add another box. Repeat this process for each event type and label them in column `A`. Change the colors of the different boxes for convenience.
+
+5. Highlight cell range `C2:I5`, the colored box, right click, then select "Define named range." Type in the event type as the range name. Repeat this for all event types.
+
+6. Click on "Data" -> "Protected sheets and ranges" -> "Add a sheet or range" -> "Sheet" -> "Except certain cells." Add all of the event types. You can do this by typing their names, instead of their cell values. This will restrict all editing to the colored boxes. Click "Change permissions" to finalize the restrictions. Leave the option as "Restrict who can edit this range" and "Only you."
+
+    * See the notes in MAINTAINENCE regarding editing permissions.
+
+7. You are now going to make a "Comments and Requests" section. Add at least 10 rows to the top of the spreadsheet. Right click on cell `A1` and select "Insert row." Redo that action several times until you have enough spaces for people to leave requests that the admin will address. Horizontal merge columns `A-B` and `C-I`. Type "Name" in cell `A1` and bold it. Type "Comments and Requests in cell `C1` and bold it. Also you probably want make borders for it. Now make a named range in `A2:I[bottom]` and add it to the protected sheet.
