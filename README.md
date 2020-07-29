@@ -11,6 +11,8 @@ This project is intended for use by Suffield Middle School, but can be expanded 
 
 #### COMMANDS
 
+![](ExampleResponse.png)\
+
 * Commands are split into 3 categories: School, Day, and Event Type. The order does not matter, nor does spacing or spelling, as long as the words exist. `23e@fRIdaY-04]GaMEs';^` can still pick out "friday" and "games." If multiple instances of the same category are found, the program will default to the first one in the list, not the first on in the command. `games lunch` will return the lunch menu because it is listed first.
 
     * School: `SMS`. Defaults to `SMS` if no school is given.
@@ -18,8 +20,6 @@ This project is intended for use by Suffield Middle School, but can be expanded 
     * Day: `Monday`, `Tuesday`, `Wednesday`, `Thursday`, `Friday`, `Saturday`, `Sunday`, `Today`, `Tomorrow`. `Today` and `Tomorrow` assign the weekday based on when the command was received. Defaults to `Today` if no day is given.
 
     * Event: `Lunch`, `Breakfast`, `Games`, `Practices`, `Clubs`, `Intramural`, `News`, `PTAC`. Special commands, which replace the event type, are `List` and `FullHelp`. They name every command and explain the structure, with the latter command being more comprehensive. The event must be given. Any command without a recognizable event type will instead tell the user to type "list" if they want a list of commands.
-
-
 
 * Events are also separated by date. The program will also place a warning on any date that does not match the corresponding weekday. Depending on how the spreadsheet is scheduled, you may find multiple weeks worth of entries for a particular weekday.
 
