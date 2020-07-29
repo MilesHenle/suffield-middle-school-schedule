@@ -7,12 +7,26 @@ This program accepts texted commands and responds with information periodically 
 
 This project is intended for use by Suffield Middle School, but can be expanded on for other cases. This project requires you to supply your Twilio account with money for inbound and outbound messaging fees. The owner/admin of the spreadsheet has total control over the spreadsheet. Everyone else is restricted to the editing boxes highlighted in various colors. The admin can expand editing boxes, but must follow the instructions carefully.
     
-* A typical invocation of this program will be `java -jar /path/to/MiddleSchoolSchedule.jar -DproPath=app/example/path -Dlimit=50`. I recommend changing directory to the encompassing folder if possible, for minimal confusion regarding file paths.
+* A typical invocation of this program looks like `java -jar /path/to/MiddleSchoolSchedule.jar -DproPath=app/example/path -Dlimit=50`. Replace the example words with the real path as needed. The paths of the files and folders are automatically typed in if you drag the icon into the terminal. I also recommend changing directory to the encompassing folder if possible, especially if you plan on making changes to any file paths. This can be done with `cd "/path/to/folder"`. This will take care of the paths the first time, allowing you to call the program with only the JAR name.
+
+#### COMMANDS
+
+* Commands are split into 3 categories: School, Day, and Event Type. The order does not matter, nor does spacing or spelling, as long as the words exist. `23e@fRIdaY-04]GaMEs';^` can still pick out "friday" and "games." If multiple instances of the same category are found, the program will default to the first one in the list, not the first on in the command. `games lunch` will return the lunch menu because it is listed first.
+
+    * School: `SMS`. Defaults to `SMS` if no school is given.
+
+    * Day: `Monday`, `Tuesday`, `Wednesday`, `Thursday`, `Friday`, `Saturday`, `Sunday`, `Today`, `Tomorrow`. `Today` and `Tomorrow` assign the weekday based on when the command was received. Defaults to `Today` if no day is given.
+
+    * Event: `Lunch`, `Breakfast`, `Games`, `Practices`, `Clubs`, `Intramural`, `News`, `PTAC`. Special commands, which replace the event type, are `List` and `FullHelp`. They name every command and explain the structure, with the latter command being more comprehensive. The event must be given. Any command without a recognizable event type will instead tell the user to type "list" if they want a list of commands.
+
+
+
+* Events are also be separated by date. The program will also place a warning on any date that does not match the corresponding weekday. Depending on how the spreadsheet is scheduled, you may find multiple weeks worth of entries for a particular weekday.
 
 #### INSTALLATION
 
 ![](FileStructure.png)\
-Your end product should resemble this when complete. If you are tying this to your own Gmail, then you will provide `credentials.json`, and `StoredCredential` will be created when you first run the code. The `phone[date].txt` files will be created on the first message of each day.
+Your end product should resemble this when complete. All of the files, except the `phone[date].txt` files, can be downloaded from this repository. If you are not given the file hierarchy separately, then you will make it yourself. Name the folders as seen above. This is all contained in a larger folder, whose name does not matter. The given credentials are for `smsstuco@gmail.com`, which give this program the same permissions as the account itself. If you are tying this to your own Gmail, then you will provide `credentials.json`, and `StoredCredential` will be created when you first run the code. The `phone[date].txt` files will be created when the program receives the first message of that day.
 
 1. Properties
 
@@ -24,7 +38,7 @@ Your end product should resemble this when complete. If you are tying this to yo
 
     2. Create a password and enter it into the `password` line of `schedule.properties`. This will be used later for another layer of security. Beware of special HTTP formatting.
 
-    3. Create a Google Spreadsheet. You must copy it from the template [here](https://docs.google.com/spreadsheets/d/1QO8fHedJbx6vxmhYS0U85K8SFER1Gwg3t27rhXrGweQ/edit?usp=sharing). Make sure that whomever does this uses the correct Google account. Only the admin can change the cell arrangement. All others will be restricted to the editing boxes (more on those later). In the URL, you will find a long string of random characters, separated by slashes. Copy and paste it into the `GoogleID` line of `schedule.properties`. For reference, the template's ID is `1QO8fHedJbx6vxmhYS0U85K8SFER1Gwg3t27rhXrGweQ`. Be sure to disable the sharing link if you want to invite personnel individually.
+    3. Create a Google Spreadsheet. You must copy it from the template here: (https://docs.google.com/spreadsheets/d/1QO8fHedJbx6vxmhYS0U85K8SFER1Gwg3t27rhXrGweQ/edit?usp=sharing). Make sure that whomever does this uses the correct Google account. Only the admin can change the cell arrangement. All others will be restricted to the editing boxes (more on those later). In the URL, you will find a long string of random characters, separated by slashes. Copy and paste it into the `GoogleID` line of `schedule.properties`. For reference, the template's ID is `1QO8fHedJbx6vxmhYS0U85K8SFER1Gwg3t27rhXrGweQ`. Be sure to disable the sharing link if you want to invite personnel individually.
 
         * If the link does not work, then you will have to recreate this on your own. Find detailed instructions for this below.
 
@@ -32,7 +46,7 @@ Your end product should resemble this when complete. If you are tying this to yo
 
     5. `limit` specifies the number of times any one user may send a command to the program in a given interval of time. After reaching the limit, the user will be warned and given links to the website for the complete schedule. All future requests will not be responded to until the interval has passed. This is to protect against large Twilio bills from potential message bots. 
 
-    6. `limitInterval` is the length of time before resetting the command count of each user. It is counted in milliseconds: 60000 for 1 minute. Do not use any kind of arithmetic signs. It is read as a string, so `10 * 60000` will result in an error. Consider a reasonable limit with a long interval. If someone sends 10 commands, they probably will not have more questions for most of that day. If the user actually wanted the entire week's schedule, it would be easier for them to go to the website anyway. 15 commands in 6 hours is what I would recommend, but you decide. The program also adjusts the timing to align the interval with the clock. 15 min interval results in 1:00 -> 1:15 -> 1:30.
+    6. `limitInterval` is the length of time before resetting the command count of each user. It is counted in milliseconds: 60000 for 1 minute. Do not use any kind of arithmetic signs. It is read as a string, so `10 * 60000` will result in an error. Consider a reasonable limit with a long interval. If someone sends 10 commands, they probably will not have more questions for most of that day. If the user actually wanted the entire week's schedule, it would be easier for them to go to the website anyway. 15 commands in 6 hours is what I would recommend, but you decide. The program also adjusts the timing to align the interval with the clock. 15 min interval results in 1:00 -> 1:15 -> 1:30. The program currently prints the time to the console every interval, but this can be changed easily.
 
     7. `limitMessage` is the human representation of `limitInterval`, which will be given to the user upon reaching `limit`. 600000 milliseconds = 10 minutes.
 
@@ -55,6 +69,8 @@ Your end product should resemble this when complete. If you are tying this to yo
 3. GOOGLE SHEETS
 
     * This only applies if you are making your own credentials and tying them to your own Gmail account.
+
+    * The account should be a spare account without access to sensitive information in Google Drive. The program is not capable of doing anything other than reading from the spreadsheet it is given, but it is still granted the access to anything in the account's Google Drive. This account should be granted viewing privileges to the spreadsheet and nothing else. **I insist that you do not tie this to the spreadsheet owner account.**
 
     1. Sign in to the desired Gmail account. Go to the Java Quickstart of the Google Sheets API [here](https://developers.google.com/sheets/api/quickstart/java) and click the blue icon with "Enable the Google Sheets API."
     
@@ -80,7 +96,13 @@ Your end product should resemble this when complete. If you are tying this to yo
 
     * All HTTP POST requests are recorded in the `phone[date].txt` files. The timestamp is in ISO 8601 format. The entry is formatted like this: `+18609665991	2020-06-26T11:18:32EDT	Thursday games`. The files are separated by day, and a new file is made on the first message of each day.
 
-    * All HTTP GET requests are recorded in `web.txt`, formatted the same way.
+    * All Google related connection errors are printed to console. I can configure the program to write them to a text file instead, if you desire more permanent logging. Connection errors related to Twilio are not detectable, since the program will never know that the POST request was called in the first place. Twilio's website itself will keep track of errors on their end.
+
+        * Unable to Connect: generated by an UnknownHostException. Generally means that the connection could not be formed.
+
+        * Connection Lost: generated by a ConnectionException. Generally means that the connection existed but was broken midway.
+
+        * All other exceptions will be first identified as an IOException or a GeneralSecurityException, with the former being more common. It will then be followed by a description of the specific exception.
 
 2. TWILIO
 
@@ -124,7 +146,7 @@ Your end product should resemble this when complete. If you are tying this to yo
 
 * Follow these steps **to the letter** in order to recreate the spreadsheet. You can continue with the regular installation steps once the blank sheet is made and you have the spreadsheet ID, but you will have to complete this before first running the code.
 
-* Currently, the event types are `Lunch`, `Breakfast`, `Games`, `Practices`, `Clubs`, `Intramural`, `News`, `PTAC`.
+* Again, the event types are `Lunch`, `Breakfast`, `Games`, `Practices`, `Clubs`, `Intramural`, `News`, `PTAC`.
 
 1. Type "Event Types" in cell `A1`. Type "Lunch," or whichever event type goes first, in cell `A2`; the order does not matter. Label cells `B1` and `B2` as "Description" and "Date" respectively. Label columns `C-I` at the top as Monday-Sunday. This format will be continued with each event type, as seen above.
 
