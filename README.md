@@ -21,7 +21,7 @@ This project is intended for use by Suffield Middle School, but can be expanded 
 
 
 
-* Events are also be separated by date. The program will also place a warning on any date that does not match the corresponding weekday. Depending on how the spreadsheet is scheduled, you may find multiple weeks worth of entries for a particular weekday.
+* Events are also separated by date. The program will also place a warning on any date that does not match the corresponding weekday. Depending on how the spreadsheet is scheduled, you may find multiple weeks worth of entries for a particular weekday.
 
 #### INSTALLATION
 
